@@ -1,252 +1,335 @@
 Config = {}
+ps = exports.ps_lib:init()
 
------------------------------------------------------------
--- Allowed Jobs (any job listed can open the MDT)
------------------------------------------------------------
-Config.AllowedJobs = { 'police', 'bcso' }
+-- Basic Settings
+Config.Debug = false -- Enable/disable debug mode (boolean)
+Config.OnlyShowOnDuty = true -- Only allow the MDT to be opened when on duty (boolean)
 
------------------------------------------------------------
--- Physical MDT Terminal Locations
------------------------------------------------------------
-Config.MDTStations = {
-    vec3(441.2, -982.0, 30.7),   -- Mission Row PD
-    vec3(1853.9, 3686.8, 34.3),  -- Sandy Shores Sheriff
-    vec3(-448.5, 6013.6, 31.7),  -- Paleto Bay Sheriff
+-- Civilian Access Settings
+Config.CivilianAccess = {
+    enabled = true,   -- Allow civilians to open the MDT (profile + legislation view only)
+    command = true,   -- Allow /mdt command for civilians
+    showWarrants = true, -- Show active warrants on civilian profile
+    showBolos = true,    -- Show active BOLOs on civilian profile
 }
-Config.UsePhysicalTerminals = true
-Config.TerminalInteractDist = 2.0  -- metres to interact
-Config.TerminalScanDist     = 50.0 -- metres before fast-loop activates
 
------------------------------------------------------------
--- Permissions based on job grades
------------------------------------------------------------
-Config.Permissions = {
-    ['police'] = {
-        minimumGrade = 0, -- All police can access
-        features = {
-            dashboard = true,
-            dispatch = { view = true, create = true, assign = 2 }, -- grade 2+ can assign
-            citizens = { view = true, edit = 3, delete = 4 },
-            vehicles = { view = true, flag = 1 },
-            incidents = { view = true, create = 2, close = 3 },
-            warrants = { view = true, create = 3, execute = 4 },
-            bolos = { view = true, create = 2, remove = 3 },
-            evidence = { view = true, add = 2, manage = 3 },
-            charges = { view = true, process = 1 },         -- process = charge & fine/jail citizens
-            weapons = { view = true, register = 1, flag = 2 },
-            roster = { view = true, manage = 3 },           -- manage = edit callsigns
-            announcements = { view = true, create = 3, remove = 4 },
-            licenses = { view = true, manage = 2 },         -- manage = grant/revoke licenses
-            profiles = { view = true, edit = 1 },           -- edit = mugshot, notes, flags
-            admin = 4 -- grade 4+ for admin features
+-- Time and Date Settings
+Config.DateTime = {
+    GameTime = true, -- If set to true, the game time will be used instead of the server time (boolean)
+    TimeFormat = '24', -- Format for displaying time ('24' or '12')
+    DateFormat = "MM-DD-YYYY" -- Format for displaying date (string: "MM-DD-YYYY", "DD-MM-YYYY", or "YYYY-MM-DD")
+}
+
+-- Department data sharing
+Config.Sharing = {
+    -- Mutual Sharing (Bidirectional)
+    -- All departments in this group can see each other's data
+    Mutual = {
+        types = {
+            'reports',
+            'bodycams',
+            'evidence',
+            'bolos',
+            'warrants'
+        },
+        departments = {
+            'lspd',
+            'bcso',
+            'sahp'
         }
     },
-    ['bcso'] = {
-        minimumGrade = 0,
-        features = {
-            dashboard = true,
-            dispatch = { view = true, create = true, assign = 2 },
-            citizens = { view = true, edit = 3 },
-            vehicles = { view = true, flag = 1 },
-            incidents = { view = true, create = 2, close = 3 },
-            warrants = { view = true, create = 3 },
-            bolos = { view = true, create = 2 },
-            evidence = { view = true, add = 2 },
-            charges = { view = true, process = 1 },
-            weapons = { view = true, register = 1, flag = 2 },
-            roster = { view = true, manage = 3 },
-            announcements = { view = true, create = 3, remove = 4 },
-            licenses = { view = true, manage = 2 },
-            profiles = { view = true, edit = 1 },
-            admin = 4
-        }
-    }
-}
 
--- UI Configuration
-Config.UI = {
-    PrimaryColor = '#3B82F6',
-    BackgroundColor = '#0f172a',
-    CardColor = '#1e293b',
-    TextColor = '#e2e8f0',
-    FontFamily = 'Inter',
-    BorderRadius = '12px',
-    AnimationSpeed = 300
-}
-
--- Dispatch Priority Settings
-Config.DispatchPriority = {
-    [1] = { color = '#10B981', label = 'Low', responseTime = 1800 },
-    [2] = { color = '#3B82F6', label = 'Medium', responseTime = 1200 },
-    [3] = { color = '#F59E0B', label = 'High', responseTime = 600 },
-    [4] = { color = '#EF4444', label = 'Critical', responseTime = 300 },
-    [5] = { color = '#DC2626', label = 'Emergency', responseTime = 120 }
-}
-
--- Database Table Names
-Config.DatabaseTables = {
-    calls = 'mdt_calls',
-    incidents = 'mdt_incidents',
-    warrants = 'mdt_warrants',
-    bolos = 'mdt_bolos',
-    evidence = 'mdt_evidence',
-    officers = 'mdt_officers',
-    penalties = 'mdt_penalties'
+    -- One-Way Sharing (Unidirectional)
+    -- Viewers can see target department data, but not vice versa
+    OneWay = {
+        { -- Example: FIB and GOV 
+            viewers = {
+                'fib',
+                'gov'
+            },
+            targets = {
+                'lspd',
+                'bcso',
+                'sahp'
+            },
+            types = {
+                'reports',
+                'bodycams',
+                'evidence',
+                'bolos',
+                'warrants',
+            }
+        },
+    },
 }
 
 -- Keybinds
-Config.Keybinds = {
-    OpenMDT = { key = 'F5', command = 'openmdt', description = 'Open Police MDT' },
-    QuickDispatch = { key = 'F6', command = 'quickdispatch', description = 'Quick Dispatch Menu' }
-}
-
--- Real-time Update Intervals (ms)
-Config.UpdateIntervals = {
-    dispatch = 5000,
-    officers = 10000,
-    calls = 3000
-}
-
--- Search Settings
-Config.Search = {
-    minCharacters = 2,
-    maxResults = 50,
-    timeout = 5000
-}
-
--- Notification Settings
-Config.Notifications = {
-    sound = true,
-    position = 'top-right',
-    duration = 5000
-}
-
--- Department Settings
-Config.Departments = {
-    police = { name = 'Los Santos Police Department', short = 'LSPD', theme = 'blue' },
-    bcso = { name = 'Blaine County Sheriff Office', short = 'BCSO', theme = 'green' }
-}
-
--- Offense Categories (from reference image)
-Config.OffenseCategories = {
-    traffic = { label = 'Traffic Violations', color = '#3B82F6' },
-    misdemeanor = { label = 'Misdemeanors', color = '#F59E0B' },
-    felony = { label = 'Felonies', color = '#EF4444' },
-    warrant = { label = 'Warrants', color = '#DC2626' },
-    citation = { label = 'Citations', color = '#10B981' }
-}
-
--- Evidence Types
-Config.EvidenceTypes = {
-    photo = { label = 'Photograph', icon = 'camera' },
-    note = { label = 'Note', icon = 'document-text' },
-    weapon = { label = 'Weapon', icon = 'shield-exclamation' },
-    drug = { label = 'Drugs', icon = 'beaker' },
-    other = { label = 'Other', icon = 'archive' }
-}
-
--- Automatic Archiving
-Config.Archiving = {
-    closedIncidents = 30, -- days before archiving
-    resolvedCalls = 7,
-    executedWarrants = 14
-}
-
--- Rate Limiting
-Config.RateLimits = {
-    search = { count = 10, time = 30 },
-    create = { count = 5, time = 60 },
-    update = { count = 20, time = 30 }
-}
-
------------------------------------------------------------
--- Webhook (Discord audit logging via tb-lib)
------------------------------------------------------------
-Config.WebhookURL = '' -- set your Discord webhook URL here
-
------------------------------------------------------------
--- Penal Code
--- Each charge has a fine range and jail range (minutes).
--- Officers pick the exact value with a slider when processing.
------------------------------------------------------------
-Config.PenalCode = {
-    traffic = {
-        { id = 'T01', title = 'Speeding',                   fineMin = 250,   fineMax = 1000,  jailMin = 0,  jailMax = 0,   points = 1 },
-        { id = 'T02', title = 'Reckless Driving',           fineMin = 500,   fineMax = 2000,  jailMin = 0,  jailMax = 5,   points = 2 },
-        { id = 'T03', title = 'Running a Red Light',        fineMin = 150,   fineMax = 500,   jailMin = 0,  jailMax = 0,   points = 1 },
-        { id = 'T04', title = 'Driving Without a License',  fineMin = 500,   fineMax = 1200,  jailMin = 0,  jailMax = 0,   points = 2 },
-        { id = 'T05', title = 'Illegal Parking',            fineMin = 100,   fineMax = 300,   jailMin = 0,  jailMax = 0,   points = 0 },
-        { id = 'T06', title = 'Evading Police (Vehicle)',   fineMin = 1500,  fineMax = 5000,  jailMin = 5,  jailMax = 15,  points = 3 },
-        { id = 'T07', title = 'DUI / Impaired Driving',     fineMin = 1000,  fineMax = 3000,  jailMin = 0,  jailMax = 10,  points = 3 },
-    },
-    misdemeanor = {
-        { id = 'M01', title = 'Disorderly Conduct',         fineMin = 250,   fineMax = 1000,  jailMin = 0,  jailMax = 10,  points = 0 },
-        { id = 'M02', title = 'Trespassing',                fineMin = 400,   fineMax = 1200,  jailMin = 0,  jailMax = 10,  points = 0 },
-        { id = 'M03', title = 'Vandalism',                  fineMin = 500,   fineMax = 2000,  jailMin = 5,  jailMax = 15,  points = 0 },
-        { id = 'M04', title = 'Petty Theft',                fineMin = 500,   fineMax = 2000,  jailMin = 5,  jailMax = 15,  points = 0 },
-        { id = 'M05', title = 'Assault',                    fineMin = 1000,  fineMax = 3500,  jailMin = 10, jailMax = 20,  points = 0 },
-        { id = 'M06', title = 'Possession of Illegal Item', fineMin = 750,   fineMax = 2500,  jailMin = 5,  jailMax = 15,  points = 0 },
-        { id = 'M07', title = 'Resisting Arrest',           fineMin = 1000,  fineMax = 3000,  jailMin = 10, jailMax = 20,  points = 0 },
-        { id = 'M08', title = 'Obstruction of Justice',     fineMin = 750,   fineMax = 2500,  jailMin = 5,  jailMax = 15,  points = 0 },
-    },
-    felony = {
-        { id = 'F01', title = 'Grand Theft Auto',           fineMin = 2500,  fineMax = 8000,  jailMin = 20, jailMax = 40,  points = 0 },
-        { id = 'F02', title = 'Armed Robbery',              fineMin = 4000,  fineMax = 12000, jailMin = 30, jailMax = 60,  points = 0 },
-        { id = 'F03', title = 'Assault with Deadly Weapon', fineMin = 5000,  fineMax = 15000, jailMin = 40, jailMax = 80,  points = 0 },
-        { id = 'F04', title = 'Attempted Murder',           fineMin = 8000,  fineMax = 20000, jailMin = 60, jailMax = 120, points = 0 },
-        { id = 'F05', title = 'First Degree Murder',        fineMin = 15000, fineMax = 40000, jailMin = 90, jailMax = 240, points = 0 },
-        { id = 'F06', title = 'Drug Trafficking',           fineMin = 10000, fineMax = 30000, jailMin = 40, jailMax = 90,  points = 0 },
-        { id = 'F07', title = 'Kidnapping',                 fineMin = 6000,  fineMax = 18000, jailMin = 40, jailMax = 90,  points = 0 },
-        { id = 'F08', title = 'Terrorism',                  fineMin = 25000, fineMax = 75000, jailMin = 120, jailMax = 360, points = 0 },
-        { id = 'F09', title = 'Bank Robbery',               fineMin = 8000,  fineMax = 25000, jailMin = 40, jailMax = 90,  points = 0 },
-        { id = 'F10', title = 'Possession of Class A Drug', fineMin = 5000,  fineMax = 15000, jailMin = 30, jailMax = 60,  points = 0 },
+Config.Keys = {
+    -- https://docs.fivem.net/docs/game-references/controls/ | Default QWERTY
+    OpenMDT = {
+        enabled = true, -- Enable/disable keybind (boolean)
+        key = 'F11', -- Key to open MDT (string)
     },
 }
 
------------------------------------------------------------
--- Charge processing — fines & jail
------------------------------------------------------------
+-- Commands
+Config.Commands = {
+    Open = {
+        enabled = true, -- Enable/disable command (boolean)
+        command = 'mdt', -- Command to open MDT (string)
+    },
+    MessageOfTheDay = {
+        enabled = true, -- Enable/disable command (boolean)
+        command = 'motd', -- Command to set message of the day (string)
+    },
+}
+
+-- Dispatch Settings
+Config.Dispatch = {
+    Resource = 'ps-dispatch',
+    FilterByJob = true,
+}
+
+-- Wolfknight Plate Reader Settings
+Config.UseWolfknightRadar = true -- Enable/disable Wolfknight radar integration
+Config.WolfknightNotifyTime = 5000 -- Duration (ms) for plate reader notifications
+Config.PlateScanForDriversLicense = true -- Check driver's license on plate scan
+
+-- Fingerprint Settings
+Config.FingerprintAutoFilled = false -- Auto-populate fingerprints on citizen profiles (if false, officers must manually add fingerprints)
+
+-- Fingerprint Scan Integration
+Config.FingerprintScan = {
+    enabled = false,                                         -- Enable fingerprint scan trigger from MDT
+    officerEvent = 'police:client:showFingerprint',          -- Client event triggered on the officer
+    suspectEvent = 'police:client:showFingerprint',          -- Client event triggered on the suspect
+}
+
+-- Fuel Resource Name
+Config.Fuel = 'LegacyFuel' -- Fuel resource name for vehicle fuel management
+
+-- Weapon Registration
+Config.RegisterWeaponsAutomatically = true -- Auto-register weapons on purchase (ox_inventory and qb-inventory/qb-weapons)
+Config.RegisterCreatedWeapons = false -- Also auto-register weapons on item creation (ox_inventory only)
+
+-- Impound Locations (vector4: x, y, z, heading)
+Config.ImpoundLocations = {
+    [1] = vector4(409.09, -1623.37, 29.29, 232.07), -- LSPD Impound
+    [2] = vector4(-436.42, 5982.29, 31.34, 136.0),  -- Paleto Impound
+}
+
+-- Job Settings
+Config.PoliceJobType = "leo"
+Config.PoliceJobs = {
+    'lspd',
+    'bcso',
+    'sahp',
+    'fib',
+    'gov'
+}
+
+Config.DojJobType = "doj"
+Config.DojJobs = {
+    'lawyer',
+    'judge',
+}
+
+Config.MedicalJobType = "ems"
+Config.MedicalJobs = {
+    'ambulance',
+}
+
+Config.Uploads = {
+    MaxBytes = 5242880, -- 5 MB
+    RateLimitPerMinute = 10, -- Max uploads per player per minute (0 = unlimited)
+    AllowedAttachmentTypes = {
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'application/pdf'
+    },
+    AllowedEvidenceImageTypes = {
+        'image/jpeg',
+        'image/png',
+        'image/webp'
+    }
+}
+
+-- Pagination Limits
+Config.Pagination = {
+    Citizens = 20, -- Citizens per page
+    CitizenSearch = 20, -- Max citizen search results
+    Cases = 20, -- Cases per page
+}
+
+-- Fine Processing
 Config.Fines = {
-    -- 'bank_then_record' = deduct from bank if online & affordable,
-    --                      otherwise store an unpaid fine record.
-    -- 'record_only'      = never auto-deduct, always create an unpaid record.
-    method  = 'bank_then_record',
-    account = 'bank',
+    MaxAmount = 100000,   -- Maximum fine amount ($) to prevent economy exploits
+    CooldownMs = 30000,   -- Anti-spam cooldown between fines (milliseconds)
 }
 
-Config.Jail = {
-    enabled  = true,
-    -- 'event'  = fire Config.Jail.event with (targetSrc, minutes) — works with
-    --            qb-policejob/qb-prison style handlers out of the box.
-    -- 'export' = call Config.Jail.export(targetSrc, minutes) if you use a
-    --            custom prison resource; edit the function below.
-    -- 'none'   = record sentence on the rap sheet only (no teleport).
-    mode  = 'event',
-    event = 'police:server:JailPlayer', -- (source, timeMinutes) — qb-prison compatible
-    -- Used when mode = 'export'. Adapt to your prison resource:
-    export = function(targetSrc, minutes, charges)
-        -- e.g. exports['xt-prison']:JailPlayer(targetSrc, minutes)
-        TriggerEvent('police:server:JailPlayer', targetSrc, minutes)
-    end,
+-- Warrant Defaults
+Config.Warrants = {
+    DefaultExpiryDays = 7, -- Default warrant expiry when no date is provided
 }
 
--- Driver's license points: auto-revoke at the limit.
-Config.LicensePoints = {
-    enabled    = true,
-    limit      = 12,        -- accumulated points that trigger revocation
-    license    = 'driver',  -- metadata licence key to revoke
+-- Dashboard Cache TTLs (seconds)
+Config.CacheTTL = {
+    ReportStats = 30,
+    ActiveUnits = 10,
+    UsageMetrics = 60,
 }
 
------------------------------------------------------------
--- Panic button
------------------------------------------------------------
-Config.Panic = {
-    enabled      = true,
-    command      = 'panic',
-    key          = 'F9',
-    cooldown     = 30,   -- seconds between presses per officer
-    blipDuration = 60,   -- seconds the panic blip stays on the map
-    blipSprite   = 161,
-    blipColor    = 1,
-    blipScale    = 1.2,
+-- Tablet Animation
+Config.Animation = {
+    Dict = 'amb@world_human_tourist_map@male@base',
+    Name = 'base',
+}
+
+-- Mugshot Camera
+Config.MugshotCamera = {
+    DefaultFov = 50.0,
+    FovMin = 15.0,
+    FovMax = 80.0,
+    FovSpeed = 5.0,
+}
+
+-- Security Camera Viewer
+Config.CameraViewer = {
+    RotationSpeed = 0.15,
+    ZoomClamp = { min = 0.25, max = 10.0 },
+    StartingZoom = 3.0,
+    ZoomStep = 0.1,
+    FovMin = 10.0,
+    FovMax = 100.0,
+    FovStep = 2.0,
+}
+
+-- Management permissions and defaults (per job grade)
+Config.ManagementPermissions = {
+    -- Citizens
+    'citizens_search',
+    'citizens_edit_licenses',
+    -- BOLOs
+    'bolos_view',
+    'bolos_create',
+    -- Vehicles
+    'vehicles_search',
+    'vehicles_edit_dmv',
+    -- Weapons
+    'weapons_search',
+    -- Cases
+    'cases_view',
+    'cases_create',
+    'cases_edit',
+    'cases_delete',
+    -- Evidence
+    'evidence_view',
+    'evidence_create',
+    'evidence_transfer',
+    'evidence_upload',
+    -- Reports
+    'reports_view',
+    'reports_create',
+    'reports_delete',
+    -- Warrants
+    'warrants_view',
+    'warrants_issue',
+    'warrants_close',
+    -- Charges
+    'charges_view',
+    'charges_edit',
+    -- Dispatch
+    'dispatch_attach',
+    'dispatch_route',
+    -- Cameras & Bodycams
+    'cameras_view',
+    'bodycams_view',
+    -- Notes
+    'notes_edit_department',
+    -- Roster
+    'roster_manage_certifications',
+    'roster_manage_officers',
+    -- PPR
+    'ppr_view',
+    'ppr_manage',
+    -- FTO
+    'fto_view',
+    'fto_manage',
+    -- Management
+    'management_permissions',
+    'management_bulletins',
+    'management_activity',
+}
+
+-- Bodycam Settings (override defaults if needed, remove to use built-in defaults)
+Config.Bodycam = {
+    DutyEvent = 'QBCore:Server:OnJobUpdate',
+    DutyEventMode = 'qbcore',
+    MultiJobDutyEvent = 'ps-multijob:server:dutyChanged',
+    DutyResource = 'qb-core',
+    MultiJobResource = 'ps-multijob',
+}
+
+-- Optional defaults for role permissions by job/grade
+-- Example:
+-- Config.PermissionDefaults = {
+--     police = {
+--         ['0'] = { 'access_reports' },
+--         ['1'] = { 'access_reports', 'view_bodycams' },
+--     }
+-- }
+Config.PermissionDefaults = Config.PermissionDefaults or {}
+
+-- HIGHLY recommended not tuse this natively. Use FiveManage for this.
+-- Activity Tracking - Controls which actions are logged to the audit trail
+-- Categories can be toggled on/off from the Settings page in the MDT
+-- These are the DEFAULT values; runtime changes are stored in the mdt_settings table
+Config.AuditTracking = {
+    authentication = true,   -- Login/logout events
+    reports = true,          -- Report create, update, delete
+    cases = true,            -- Case CRUD, officer assignments, attachments
+    evidence = true,         -- Evidence CRUD, transfers, images
+    warrants = true,         -- Warrant issued/closed
+    vehicles = true,         -- Vehicle updates, impound/release
+    weapons = true,          -- Weapon create, update, delete
+    charges = true,          -- Fines processed, charges updated
+    searches = false,        -- Citizen/player/officer searches (high volume)
+    dispatch = true,         -- Signal 100 activate/deactivate
+    officers = true,         -- Callsign changes
+    sentencing = true,       -- Jail sentencing
+    arrests = true,          -- Arrest logging
+    icu = true,              -- ICU record deletion
+    cameras = true,          -- Security camera access
+    bodycams = true,         -- Officer bodycam access
+}
+
+-- Camera models available for static camera placement
+Config.CameraModels = {
+    ['security_cam_01'] = 'v_serv_securitycam_1a',
+    ['security_cam_02'] = 'v_serv_securitycam_03',
+    ['security_cam_03'] = 'ba_prop_battle_cctv_cam_01a',
+    ['security_cam_04'] = 'prop_cctv_cam_06a',
+    ['security_cam_05'] = 'ba_prop_battle_cctv_cam_01b',
+    ['security_cam_06'] = 'prop_cctv_cam_01b',
+    ['security_cam_07'] = 'ch_prop_ch_cctv_cam_02a',
+    ['security_cam_08'] = 'prop_cctv_cam_04c',
+    ['security_cam_09'] = 'prop_cctv_cam_03a',
+    ['security_cam_10'] = 'ch_prop_ch_cctv_cam_01a',
+    ['security_cam_11'] = 'prop_cctv_cam_01a',
+    ['security_cam_12'] = 'prop_cctv_cam_05a',
+    ['security_cam_13'] = 'prop_cctv_cam_07a',
+    ['security_cam_14'] = 'prop_cctv_cam_04b',
+    ['security_cam_15'] = 'tr_prop_tr_camhedz_cctv_01a',
+    ['security_cam_16'] = 'prop_cctv_cam_02a',
+    ['security_cam_17'] = 'prop_cctv_cam_04a',
+    ['cctv_cam_01'] = 'm24_1_prop_m24_1_carrier_bank_cctv_02',
+    ['cctv_cam_02'] = 'xm_prop_x17_cctv_01a',
+    ['cctv_cam_03'] = 'prop_cctv_pole_02',
+    ['cctv_cam_04'] = 'm24_1_prop_m24_1_carrier_bank_cctv_01',
+    ['cctv_cam_05'] = 'prop_cctv_pole_04',
+    ['cctv_cam_06'] = 'xm_prop_x17_server_farm_cctv_01',
+    ['cctv_cam_07'] = 'prop_cctv_pole_03',
+    ['cctv_cam_08'] = 'p_cctv_s',
+    ['cctv_cam_09'] = 'hei_prop_bank_cctv_02',
 }

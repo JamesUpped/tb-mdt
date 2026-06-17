@@ -1,42 +1,49 @@
 fx_version 'cerulean'
-game 'gta5'
 lua54 'yes'
+use_experimental_fxv2_oal 'yes'
+game 'gta5'
 
 name 'tb-mdt'
-author 'Toybox'
-description 'Police MDT — premium SaaS-style mobile data terminal'
-version '1.1.0'
+author "Toybox"
+description 'Toybox MDT (based on ps-mdt)'
+version '3.1.0'
 
-ui_page {
-    'web/dist/index.html',
+ui_page 'web/dist/index.html'
+
+dependencies {
+  'ps_lib',
+  'oxmysql',
+  'ox_lib'
 }
 
 shared_scripts {
-    '@ox_lib/init.lua',
-    'shared/framework.lua',
-    'config.lua',
-    'locales/en.lua',
+  'config.lua',
+  '@ox_lib/init.lua'
 }
 
-client_scripts {
-    'client/main.lua',
+client_script {
+  'client/**.lua'
 }
 
 server_scripts {
-    '@oxmysql/lib/MySQL.lua',
-    'server/tblib.lua',
-    'server/database.lua',
-    'server/main.lua',
-    'server/records.lua',
+  '@oxmysql/lib/MySQL.lua',
+  'server/**.lua'
 }
 
 files {
-    'web/dist/index.html',
-    'web/dist/assets/*.*',
+  'web/dist/index.html',
+  'web/dist/**/*'
 }
 
-dependencies {
-    'ox_lib',
-    'oxmysql',
-    'tb-lib',
+data_file 'DLC_ITYP_REQUEST' 'stream/ps-mdt.ytyp'
+
+-- Server convars (set in server.cfg):
+-- set ps_mdt_fivemanage_key_images "YOUR_FIVEMANAGE_IMAGES_API_KEY"
+-- set ps_mdt_fivemanage_key_logs   "YOUR_FIVEMANAGE_LOGS_API_KEY"
+convar_category 'PS-MDT' {
+  'Settings for ps-mdt resource',
+  {
+    { 'FiveManage Images API Key', 'ps_mdt_fivemanage_key_images', 'CV_STRING', '' },
+    { 'FiveManage Logs API Key',   'ps_mdt_fivemanage_key_logs',   'CV_STRING', '' },
+  }
 }

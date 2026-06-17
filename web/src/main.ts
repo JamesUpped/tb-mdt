@@ -1,9 +1,12 @@
-import App from './App.vue'
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
+import { mount } from "svelte";
+import "material-icons/iconfont/filled.css";
+import "@/styles/tailwind.css";
+import "./styles/variables.css";
+import "./styles/globals.css";
+import App from "./App.svelte";
 
-const pinia = createPinia()
-const app = createApp(App)
+const app = mount(App, {
+	target: document.getElementById("app")!,
+});
 
-app.use(pinia)
-app.mount('#app')
+export default app;

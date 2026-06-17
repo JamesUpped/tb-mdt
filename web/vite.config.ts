@@ -1,25 +1,16 @@
-import tailwindcss from '@tailwindcss/vite'
-import vue from '@vitejs/plugin-vue'
-import { defineConfig } from 'vite'
-import path from 'node:path'
+import { defineConfig } from "vite";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import tailwindcss from "@tailwindcss/vite";
 
+// https://vite.dev/config/
 export default defineConfig({
-  base: './',
-  plugins: [vue(), tailwindcss()],
-  define: { 'process.env': {} },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
-    },
-    extensions: ['.js', '.json', '.ts', '.css', '.vue'],
-  },
-  build: {
-    target: 'es2015',
-    outDir: 'dist',
-    assetsDir: 'assets',
-    emptyOutDir: true,
-    rollupOptions: {
-      input: 'index.html',
-    },
-  },
-})
+	plugins: [svelte(), tailwindcss()],
+	base: "./",
+	resolve: {
+		alias: {
+			"@/": "/src/",
+			$lib: "/src/lib",
+			src: "/src",
+		},
+	},
+});
